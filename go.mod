@@ -3,6 +3,7 @@ module github.com/tigrisdata/fly-exporter
 go 1.21.3
 
 require (
+	github.com/m3db/prometheus_client_golang v1.12.8
 	github.com/stretchr/testify v1.9.0
 	github.com/uber-go/tally v3.5.10+incompatible
 )
@@ -12,7 +13,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/m3db/prometheus_client_golang v1.12.8 // indirect
 	github.com/m3db/prometheus_client_model v0.2.1 // indirect
 	github.com/m3db/prometheus_common v0.34.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect

@@ -26,6 +26,7 @@ import (
 	fly "github.com/tigrisdata/fly-exporter/client"
 	"github.com/tigrisdata/fly-exporter/models"
 
+	pclient "github.com/m3db/prometheus_client_golang/prometheus"
 	"github.com/uber-go/tally"
 	"github.com/uber-go/tally/prometheus"
 )
@@ -55,10 +56,11 @@ func assertRequiredEnv() {
 
 func NewReporter() *Reporter {
 	assertRequiredEnv()
+	reg := pclient.NewRegistry()
 
 	r := Reporter{
 		interval: 10 * time.Second,
-		reporter: prometheus.NewReporter(prometheus.Options{}),
+		reporter: prometheus.NewReporter(prometheus.Options{Registerer: reg}),
 	}
 
 	// Initialize base scopes
