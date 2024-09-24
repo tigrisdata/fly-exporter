@@ -63,6 +63,7 @@ func NewReporter() *Reporter {
 			promreporter.Options{Registerer: reg},
 		),
 	}
+	r.scopes = make(map[string]tally.Scope)
 
 	// Create root scope
 	scope, closer := tally.NewRootScope(tally.ScopeOptions{
