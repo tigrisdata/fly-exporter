@@ -19,14 +19,14 @@ package main
 import (
 	"sync"
 
-	"github.com/tigrisdata/fly-exporter/reporter"
+	"github.com/tigrisdata/fly-exporter/provider"
 )
 
 func main() {
 	var wg sync.WaitGroup
 
 	// Create reporter to serve up prometheus metrics
-	m := reporter.NewReporter()
+	m := provider.NewMetricProvider()
 	defer m.Close()
 	go m.ServeHttp()
 	wg.Add(1)

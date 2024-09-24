@@ -35,7 +35,6 @@ import (
 type Reporter struct {
 	closer   io.Closer
 	groups   []Collectable
-	interval time.Duration
 	reporter prometheus.Reporter
 	scoped
 }
@@ -60,21 +59,27 @@ func NewReporter() *Reporter {
 	reg := pclient.NewRegistry()
 
 	r := Reporter{
-		interval: 10 * time.Second,
-		reporter: promreporter.NewReporter(promreporter.Options{Registerer: reg}),
+		reporter: promreporter.NewReporter(
+			promreporter.Options{Registerer: reg},
+		),
 	}
 
-	// Initialize base scopes
-	r.scopes = make(map[string]tally.Scope)
-	r.scopes["root"], r.closer = tally.NewRootScope(tally.ScopeOptions{
+	// Create root scope
+	scope, closer := tally.NewRootScope(tally.ScopeOptions{
 		Tags:                   GetBaseTags(),
 		CachedReporter:         r.reporter,
 		Separator:              promreporter.DefaultSeparator,
 		OmitCardinalityMetrics: true,
 	}, 1*time.Second)
-	defer r.closer.Close()
+	defer closer.Close()
 
+	// Add root scope to reporter
+	r.scopes["root"] = scope
+
+	// Add prometheus prefix for root scope
 	r.AddScope(r.scopes["root"], "fly", "fly")
+
+	// Add prometheus prefix once for machine scope, collected below
 	r.AddScope(r.scopes["fly"], "machine", "machine")
 
 	// Collect metric groups
@@ -110,7 +115,7 @@ func (r *Reporter) getReport() (*models.Report, error) {
 	return &report, nil
 }
 
-func (r *Reporter) collectOnce() error {
+func (r *Reporter) CollectOnce() error {
 	report, err := r.getReport()
 	if err != nil {
 		return err
@@ -129,16 +134,6 @@ func (r *Reporter) collectOnce() error {
 
 func (r *Reporter) Close() {
 	slog.Error("failed to close server:", "error", r.closer.Close())
-}
-
-func (r *Reporter) Collect() {
-	ticker := time.NewTicker(r.interval)
-	for range ticker.C {
-		if err := r.collectOnce(); err != nil {
-			slog.Error("failed to collect metric data:", "error", err)
-		}
-	}
-	defer ticker.Stop()
 }
 
 func (r *Reporter) ServeHttp() {
