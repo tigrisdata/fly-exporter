@@ -63,7 +63,6 @@ func NewReporter() *Reporter {
 			promreporter.Options{Registerer: reg},
 		),
 	}
-	r.scopes = make(map[string]tally.Scope)
 
 	// Create root scope
 	scope, closer := tally.NewRootScope(tally.ScopeOptions{
@@ -72,9 +71,12 @@ func NewReporter() *Reporter {
 		Separator:              promreporter.DefaultSeparator,
 		OmitCardinalityMetrics: true,
 	}, 1*time.Second)
-	defer closer.Close()
+
+	// Add closer to reporter
+	r.closer = closer
 
 	// Add root scope to reporter
+	r.scopes = make(map[string]tally.Scope)
 	r.scopes["root"] = scope
 
 	// Add prometheus prefix for root scope
