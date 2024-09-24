@@ -29,6 +29,7 @@ import (
 	pclient "github.com/m3db/prometheus_client_golang/prometheus"
 	"github.com/uber-go/tally"
 	"github.com/uber-go/tally/prometheus"
+	promreporter "github.com/uber-go/tally/prometheus"
 )
 
 type Reporter struct {
@@ -60,7 +61,7 @@ func NewReporter() *Reporter {
 
 	r := Reporter{
 		interval: 10 * time.Second,
-		reporter: prometheus.NewReporter(prometheus.Options{Registerer: reg}),
+		reporter: promreporter.NewReporter(promreporter.Options{Registerer: reg}),
 	}
 
 	// Initialize base scopes
@@ -68,9 +69,11 @@ func NewReporter() *Reporter {
 	r.scopes["root"], r.closer = tally.NewRootScope(tally.ScopeOptions{
 		Tags:                   GetBaseTags(),
 		CachedReporter:         r.reporter,
-		Separator:              prometheus.DefaultSeparator,
+		Separator:              promreporter.DefaultSeparator,
 		OmitCardinalityMetrics: true,
 	}, 1*time.Second)
+	defer r.closer.Close()
+
 	r.AddScope(r.scopes["root"], "fly", "fly")
 	r.AddScope(r.scopes["fly"], "machine", "machine")
 
